@@ -82,7 +82,7 @@ CSV должен содержать заголовки. В текстовых э
 - `.github/workflows/release.yml` реагирует на тег `v*`, собирает подписанный APK и создаёт GitHub Release.
 - В GitHub Actions → Settings → Secrets and variables → Actions создайте secrets: `RELEASE_KEYSTORE_BASE64`, `RELEASE_STORE_PASSWORD`, `RELEASE_KEY_ALIAS`, `RELEASE_KEY_PASSWORD`. Base64 — содержимое keystore. Keystore и пароли не должны попадать в git.
 
-Ручная публикация после установки Gradle 8.13/JDK 17/Android SDK 36: `gh auth login`, добавьте четыре GitHub Secrets выше, затем выполните `gh repo create <owner>/labelcraft --source . --remote origin --push --public && git tag v0.1.0 && git push origin v0.1.0` (вместо `<owner>` укажите свой GitHub-аккаунт; имя репозитория должно быть свободно).
+Ручная публикация после установки Gradle 8.13/JDK 17/Android SDK 36: `gh auth login`, добавьте четыре GitHub Secrets выше, затем выполните `gh repo create <owner>/labelcraft --source . --remote origin --push --private && git tag v0.1.0 && git push origin v0.1.0` (вместо `<owner>` укажите свой GitHub-аккаунт; имя репозитория должно быть свободно).
 
 ## Приватность и лицензии
 

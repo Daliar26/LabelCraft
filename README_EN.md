@@ -72,4 +72,4 @@ Provide a header row and use tokens such as `{{name}}` and `{{sku}}` in text ele
 
 All label data remains on-device. There are no ads, analytics, telemetry, accounts or required cloud services. Bluetooth and image access are used only for their matching features. ZXing Core and AndroidX are Apache-2.0; this project is Apache-2.0 and permits commercial and closed-source derivatives.
 
-Manual publication: install Gradle 8.13, JDK 17 and Android SDK 36; run `gh auth login`, configure the four signing secrets listed above, then run `gh repo create <owner>/labelcraft --source . --remote origin --push --public && git tag v0.1.0 && git push origin v0.1.0` (replace `<owner>` and choose an available repository name).
+Manual publication: install Gradle 8.13, JDK 17 and Android SDK 36; run `gh auth login`, configure the four signing secrets listed above, then run `gh repo create <owner>/labelcraft --source . --remote origin --push --private && git tag v0.1.0 && git push origin v0.1.0` (replace `<owner>` and choose an available repository name).
