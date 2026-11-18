@@ -1,0 +1,2 @@
+PASS: pure-core smoke checks
+Note: compiled with kotlinc 1.9.0 and temporary stubs; this is not an Android Gradle build or JUnit execution.

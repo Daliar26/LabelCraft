@@ -1,0 +1,16 @@
+Environment check (2026-11-19)
+java: openjdk version "21.0.12.1" 2026-08-18
+kotlinc: info: kotlinc-jvm 1.9.0 (JRE 21.0.12.1+1-1-deb13u1-Debian)
+gradle: MISSING
+gh: MISSING
+adb: MISSING
+sdkmanager: MISSING
+ANDROID_HOME=unset
+ANDROID_SDK_ROOT=unset
+GITHUB_REMOTE=unset
+GH_TOKEN=unset
+GITHUB_TOKEN=unset
+Network probes:
+dl.google.com: DNS unavailable
+services.gradle.org: DNS unavailable
+github.com: DNS unavailable
