@@ -17,7 +17,7 @@
 gradle wrapper --gradle-version 8.13 --distribution-type bin
 
 # после генерации стандартного gradle-wrapper.jar:
-./gradlew assembleDebug testDebugUnitTest
+./gradlew assembleDebug test
 ```
 
 Debug APK после успешной сборки: `app/build/outputs/apk/debug/app-debug.apk`.
@@ -70,7 +70,7 @@ LABEL_PULSES=400;GAP_PULSES=24;PULSES_PER_MM=8
 24:SCROLL_UP,25:SCROLL_DOWN,92:PAGE_UP,93:PAGE_DOWN
 ```
 
-Доступны шаг 0.5–30 мм, скорость 0.25–5×, ускорение 0.5–4× и инверсия. Профиль хранится локально по Bluetooth-адресу принтера. BLE HID-устройство, которое сообщает системное событие прокрутки мыши, а не key event, не попадает в key mapper и требует отдельной обработки Pointer Scroll.
+Доступны шаг 0.5–30 мм, скорость 0.25–5×, ускорение 0.5–4× и инверсия. Профиль хранится локально по Bluetooth-адресу принтера. BLE HID-колесо, передающее Android событие pointer-scroll вместо key event, обрабатывается отдельным путём и использует тот же шаг/скорость/ускорение/инверсию; фактическую генерацию события нужно проверить на подключённом устройстве.
 
 ## Пакетная печать CSV
 
@@ -78,9 +78,11 @@ CSV должен содержать заголовки. В текстовых э
 
 ## CI и подписанный Release
 
-- `.github/workflows/android-ci.yml` собирает debug и release APK и запускает `testDebugUnitTest`.
+- `.github/workflows/android-ci.yml` собирает debug и release APK и запускает агрегирующую задачу `test` для `testDebugUnitTest` каждого Android-модуля.
 - `.github/workflows/release.yml` реагирует на тег `v*`, собирает подписанный APK и создаёт GitHub Release.
 - В GitHub Actions → Settings → Secrets and variables → Actions создайте secrets: `RELEASE_KEYSTORE_BASE64`, `RELEASE_STORE_PASSWORD`, `RELEASE_KEY_ALIAS`, `RELEASE_KEY_PASSWORD`. Base64 — содержимое keystore. Keystore и пароли не должны попадать в git.
+
+Ручная публикация после установки Gradle 8.13/JDK 17/Android SDK 36: `gh auth login`, добавьте четыре GitHub Secrets выше, затем выполните `gh repo create <owner>/labelcraft --source . --remote origin --push --public && git tag v0.1.0 && git push origin v0.1.0` (вместо `<owner>` укажите свой GitHub-аккаунт; имя репозитория должно быть свободно).
 
 ## Приватность и лицензии
 

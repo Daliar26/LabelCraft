@@ -15,7 +15,7 @@ Requires JDK 17+, Android SDK Platform 36 and Build Tools 36.0.0.
 gradle wrapper --gradle-version 8.13 --distribution-type bin
 
 # after the standard gradle-wrapper.jar has been generated:
-./gradlew assembleDebug testDebugUnitTest
+./gradlew assembleDebug test
 ```
 
 Debug APK output: `app/build/outputs/apk/debug/app-debug.apk`.
@@ -26,7 +26,7 @@ CI uses Gradle 8.13 through `gradle/actions/setup-gradle`, so hosted runners do 
 
 - Bluetooth Classic SPP/RFCOMM and BLE GATT writes; bonded/classic/BLE discovery and reconnect attempts.
 - TSPL2, ESC/POS, CPCL and ZPL encoders; protocol detection from a returned capability signature only. Silent devices require manual protocol selection.
-- WYSIWYG preview; text, Code128, EAN-13, QR, gallery/camera images, lines/frames and text rotation. JSON templates and CSV token substitution (`{{column}}`).
+- WYSIWYG preview; text, Code128, EAN-13, QR, gallery/camera images, lines/frames and text rotation. Presets 40×30, 58×40 and 100×150 mm plus custom sizes. JSON templates and CSV token substitution (`{{column}}`).
 - 20–110 mm width, 10–300 mm length, 203/300 DPI conversion, ARGB_8888 rendering and Floyd–Steinberg 1-bit rasterization.
 - Local print queue with copies, per-job status, retry and persistence.
 - Hardware scroll keys: volume, D-pad, Page Up/Down; custom key mapping, step, speed, acceleration and inversion, persisted per printer.
@@ -56,7 +56,7 @@ Default mappings are `KEYCODE_VOLUME_UP/DOWN`, `DPAD_UP/DOWN`, and `PAGE_UP/DOWN
 24:SCROLL_UP,25:SCROLL_DOWN,92:PAGE_UP,93:PAGE_DOWN
 ```
 
-Step is 0.5–30 mm, speed 0.25–5×, acceleration 0.5–4×, plus inversion. Profiles are stored locally by printer Bluetooth address. A BLE HID wheel that generates pointer-scroll events instead of key events needs a separate Pointer Scroll handler.
+Step is 0.5–30 mm, speed 0.25–5×, acceleration 0.5–4×, plus inversion. Profiles are stored locally by printer Bluetooth address. BLE HID pointer-scroll events are handled separately from key events and use the same step, speed, acceleration and inversion profile; confirm that the connected device exposes wheel events to Android.
 
 ## CSV batch printing
 
@@ -64,10 +64,12 @@ Provide a header row and use tokens such as `{{name}}` and `{{sku}}` in text ele
 
 ## CI and signed release
 
-- `.github/workflows/android-ci.yml` assembles debug/release and runs `testDebugUnitTest`.
+- `.github/workflows/android-ci.yml` assembles debug/release and runs the root `test` task, which aggregates each Android module’s `testDebugUnitTest`.
 - `.github/workflows/release.yml` reacts to `v*` tags, signs the APK and creates a GitHub Release.
 - Configure Actions secrets: `RELEASE_KEYSTORE_BASE64`, `RELEASE_STORE_PASSWORD`, `RELEASE_KEY_ALIAS`, `RELEASE_KEY_PASSWORD`. Never commit the keystore or passwords.
 
 ## Privacy and licensing
 
 All label data remains on-device. There are no ads, analytics, telemetry, accounts or required cloud services. Bluetooth and image access are used only for their matching features. ZXing Core and AndroidX are Apache-2.0; this project is Apache-2.0 and permits commercial and closed-source derivatives.
+
+Manual publication: install Gradle 8.13, JDK 17 and Android SDK 36; run `gh auth login`, configure the four signing secrets listed above, then run `gh repo create <owner>/labelcraft --source . --remote origin --push --public && git tag v0.1.0 && git push origin v0.1.0` (replace `<owner>` and choose an available repository name).

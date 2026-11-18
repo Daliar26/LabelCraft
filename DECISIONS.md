@@ -11,9 +11,10 @@
 | Bluetooth | SPP RFCOMM UUID; BLE first writable GATT characteristic, 20-byte conservative chunks | Generic transport baseline; proprietary UUID/framing/status may need device adapter |
 | Calibration | TSPL2 GAPDETECT/BLINEDETECT and ZPL ~JC; require ≥3 independent pulse readings for measured dimensions | A command alone is not a sensor measurement; unsupported firmware uses saved manual profile |
 | Sensor accuracy | Median-based pulse-to-mm estimator, synthetic reference dataset in unit tests | ±1 mm requirement can be demonstrated for the supplied test data, not guaranteed for unknown hardware |
-| Hardware scroll | KeyEvent mapper for volume/D-pad/Page keys; keyCode/action profile in app-private preferences per printer | HID pointer-wheel events are not key events and require separate Pointer Scroll implementation |
+| Hardware scroll | KeyEvent mapper for volume/D-pad/Page keys plus Pointer Scroll handler; keyCode/action profile in app-private preferences per printer | HID wheel input still depends on the OS exposing pointer events to the app |
 | Templates/batch | JSON codec + app-private files; RFC-style CSV parser and `{{column}}` substitution | Offline use, transparent data format, no cloud dependency |
+| Media profiles | `mediaType` and `gapMm` are stored in `LabelDocument` and copied into print jobs | Calibration settings survive template/queue flow and control TSPL raster command |
 | Queue | Sequential coroutine worker; SharedPreferences JSON persistence; explicit retry | Local-first baseline; no cross-device/shared queue |
 | Licensing/privacy | Apache-2.0 project; ZXing Core Apache-2.0; no ads/analytics/trackers | Allows closed-source commercial derivatives; no mandatory network access |
-| Local build | Not verified in this session | No Gradle, Android SDK, adb or network/DNS; wrapper JAR cannot be fetched/generated here |
+| Local build | Not verified in this session; isolated Kotlin smoke suite passed | No Gradle, Android SDK, adb or network/DNS; wrapper JAR cannot be fetched/generated here |
 | Publication | Deferred; CI/release workflows prepared only | No `gh` CLI, GitHub credentials, remote URL or outbound GitHub DNS in the workspace |
