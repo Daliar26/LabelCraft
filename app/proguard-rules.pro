@@ -1,0 +1,2 @@
+-keep class dev.openlabel.core.label.model.** { *; }
+-keepattributes *Annotation*
