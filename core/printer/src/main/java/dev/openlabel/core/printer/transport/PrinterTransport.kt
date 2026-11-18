@@ -82,6 +82,7 @@ class BleGattTransport(context: Context, private val device: BluetoothDevice) : 
             lastStatus = status
             if (status != android.bluetooth.BluetoothGatt.GATT_SUCCESS) {
                 if (!connection.isCompleted) connection.completeExceptionally(IllegalStateException("BLE connection error: $status"))
+                if (!writeFinished.isCompleted) writeFinished.complete(android.bluetooth.BluetoothGatt.GATT_FAILURE)
                 return
             }
             if (newState == android.bluetooth.BluetoothProfile.STATE_CONNECTED) {
@@ -89,6 +90,8 @@ class BleGattTransport(context: Context, private val device: BluetoothDevice) : 
                 g.discoverServices()
             } else if (newState == android.bluetooth.BluetoothProfile.STATE_DISCONNECTED) {
                 writeCharacteristic = null
+                lastStatus = android.bluetooth.BluetoothGatt.GATT_FAILURE
+                if (!writeFinished.isCompleted) writeFinished.complete(android.bluetooth.BluetoothGatt.GATT_FAILURE)
             }
         }
 

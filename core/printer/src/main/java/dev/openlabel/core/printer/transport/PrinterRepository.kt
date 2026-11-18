@@ -3,17 +3,18 @@ package dev.openlabel.core.printer.transport
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import java.io.IOException
 import android.os.Build
-import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.IOException
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Singleton
 class PrinterRepository @Inject constructor(@ApplicationContext private val context: Context) {
@@ -86,7 +87,8 @@ class PrinterRepository @Inject constructor(@ApplicationContext private val cont
         if (activeTransport?.isConnected() != true) reconnect()
         try {
             checkNotNull(activeTransport).send(data)
-        } catch (error: IOException) {
+        } catch (error: Exception) {
+            if (error is CancellationException || (error !is IOException && error !is IllegalStateException)) throw error
             // BluetoothSocket.isConnected may remain true after the remote peer has vanished.
             // Retry once after rebuilding the transport; a partial first write can be device-dependent.
             reconnect()
