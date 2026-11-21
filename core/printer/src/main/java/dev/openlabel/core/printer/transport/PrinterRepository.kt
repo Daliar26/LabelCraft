@@ -82,18 +82,23 @@ class PrinterRepository @Inject constructor(@ApplicationContext private val cont
         }
     }
 
-    suspend fun send(data: ByteArray) {
+    suspend fun send(data: ByteArray) = deliver { it.send(data) }
+
+    suspend fun sendFrames(frames: List<ByteArray>) = deliver { it.sendFrames(frames) }
+
+    /** Runs one transmission on the active transport; on a dropped link it reconnects and retries once. */
+    private suspend fun deliver(block: suspend (PrinterTransport) -> Unit) {
         checkNotNull(connectedDevice) { "Сначала подключите принтер" }
         if (activeTransport?.isConnected() != true) reconnect()
         try {
-            checkNotNull(activeTransport).send(data)
+            block(checkNotNull(activeTransport))
         } catch (error: Exception) {
             if (error is CancellationException || (error !is IOException && error !is IllegalStateException)) throw error
             // BluetoothSocket.isConnected may remain true after the remote peer has vanished.
             // Retry once after rebuilding the transport; a partial first write can be device-dependent.
             reconnect()
             try {
-                checkNotNull(activeTransport).send(data)
+                block(checkNotNull(activeTransport))
             } catch (retryError: Throwable) {
                 retryError.addSuppressed(error)
                 throw retryError

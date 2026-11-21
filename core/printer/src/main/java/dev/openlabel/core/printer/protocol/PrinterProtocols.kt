@@ -11,7 +11,7 @@ sealed interface ProtocolDetection {
 }
 
 @Serializable
-enum class PrinterProtocol { AUTO, TSPL2, ESC_POS, CPCL, ZPL }
+enum class PrinterProtocol { AUTO, TSPL2, ESC_POS, CPCL, ZPL, X6H }
 
 object ProtocolDetector {
     /** Detection is based on a response/capability signature. A silent printer cannot be identified safely. */
@@ -37,7 +37,7 @@ object PrinterCommandEncoder {
         }
         PrinterProtocol.ZPL -> if (profile.mediaType == dev.openlabel.core.label.model.MediaType.CONTINUOUS) null
             else "~JC".toByteArray(Charsets.US_ASCII)
-        PrinterProtocol.CPCL, PrinterProtocol.ESC_POS, PrinterProtocol.AUTO -> null
+        PrinterProtocol.CPCL, PrinterProtocol.ESC_POS, PrinterProtocol.AUTO, PrinterProtocol.X6H -> null
     }
 
     fun printRaster(protocol: PrinterProtocol, raster: MonochromeRaster, profile: LabelProfile, copies: Int = 1): ByteArray {
@@ -47,8 +47,16 @@ object PrinterCommandEncoder {
             PrinterProtocol.ESC_POS -> escPos(raster, copies)
             PrinterProtocol.CPCL -> cpcl(raster, profile, copies)
             PrinterProtocol.ZPL -> zpl(raster, copies)
+            PrinterProtocol.X6H -> X6hProtocol.frames(raster, copies).fold(ByteArray(0)) { acc, frame -> acc + frame }
             PrinterProtocol.AUTO -> error("Выберите протокол: автоматическое определение не удалось")
         }
+    }
+
+    /** Independent protocol frames; X6H frames are sent one by one so none is split across BLE writes. */
+    fun printFrames(protocol: PrinterProtocol, raster: MonochromeRaster, profile: LabelProfile, copies: Int = 1): List<ByteArray> {
+        require(copies in 1..9_999)
+        return if (protocol == PrinterProtocol.X6H) X6hProtocol.frames(raster, copies)
+        else listOf(printRaster(protocol, raster, profile, copies))
     }
 
     private fun tspl(raster: MonochromeRaster, profile: LabelProfile, copies: Int): ByteArray = buildByteArray {

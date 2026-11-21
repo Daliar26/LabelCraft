@@ -88,7 +88,7 @@ class PrintQueueManager(
                 mediaType = job.document.mediaType,
                 gapMm = job.document.gapMm,
             )
-            printers.send(PrinterCommandEncoder.printRaster(job.protocol, raster, profile, job.copies))
+            printers.sendFrames(PrinterCommandEncoder.printFrames(job.protocol, raster, profile, job.copies))
             mutableJobs.value = mutableJobs.value.map { if (it.id == id) it.copy(status = PrintJobStatus.COMPLETED, attempts = it.attempts + 1) else it }
             persist()
         } catch (error: Throwable) {

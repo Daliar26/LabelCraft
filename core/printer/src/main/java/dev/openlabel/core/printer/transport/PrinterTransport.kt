@@ -12,6 +12,8 @@ import java.io.Closeable
 import java.util.UUID
 
 private val SERIAL_PORT_PROFILE: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+private val X6H_CHARACTERISTIC_UUID: UUID = UUID.fromString("0000AE01-0000-1000-8000-00805F9B34FB")
+private const val BLE_DEFAULT_CHUNK = 20
 
 enum class TransportKind { CLASSIC_SPP, BLE }
 
@@ -26,6 +28,10 @@ data class PrinterDevice(
 interface PrinterTransport : Closeable {
     suspend fun connect()
     suspend fun send(data: ByteArray)
+    /** Sends independent frames. Transports that can keep frames intact should override this. */
+    suspend fun sendFrames(frames: List<ByteArray>) {
+        send(frames.fold(ByteArray(0)) { acc, frame -> acc + frame })
+    }
     suspend fun readAvailable(): ByteArray
     fun isConnected(): Boolean
 }
@@ -67,7 +73,7 @@ class ClassicSppTransport(private val device: BluetoothDevice) : PrinterTranspor
     }
 }
 
-/** BLE write transport. The first writable GATT characteristic is used; vendor-specific services may need a profile adapter. */
+/** BLE write transport. Prefers the AE01 characteristic of the X6H family, otherwise the first writable characteristic. */
 class BleGattTransport(context: Context, private val device: BluetoothDevice) : PrinterTransport {
     private val appContext = context.applicationContext
     @Volatile private var gatt: android.bluetooth.BluetoothGatt? = null
@@ -76,6 +82,7 @@ class BleGattTransport(context: Context, private val device: BluetoothDevice) : 
     private var servicesReady = CompletableDeferred<Unit>()
     @Volatile private var lastStatus: Int = android.bluetooth.BluetoothGatt.GATT_SUCCESS
     @Volatile private var writeFinished = CompletableDeferred<Int>()
+    @Volatile private var maxPayload = BLE_DEFAULT_CHUNK
 
     private val callback = object : android.bluetooth.BluetoothGattCallback() {
         override fun onConnectionStateChange(g: android.bluetooth.BluetoothGatt, status: Int, newState: Int) {
@@ -95,6 +102,10 @@ class BleGattTransport(context: Context, private val device: BluetoothDevice) : 
             }
         }
 
+        override fun onMtuChanged(g: android.bluetooth.BluetoothGatt, mtu: Int, status: Int) {
+            if (status == android.bluetooth.BluetoothGatt.GATT_SUCCESS) maxPayload = (mtu - 3).coerceAtLeast(BLE_DEFAULT_CHUNK)
+        }
+
         override fun onCharacteristicWrite(
             g: android.bluetooth.BluetoothGatt,
             characteristic: android.bluetooth.BluetoothGattCharacteristic,
@@ -109,11 +120,12 @@ class BleGattTransport(context: Context, private val device: BluetoothDevice) : 
                 if (!servicesReady.isCompleted) servicesReady.completeExceptionally(IllegalStateException("BLE service discovery error: $status"))
                 return
             }
-            writeCharacteristic = g.services.asSequence().flatMap { it.characteristics.asSequence() }
-                .firstOrNull { characteristic ->
-                    characteristic.properties and android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE != 0 ||
-                        characteristic.properties and android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE != 0
-                }
+            val allCharacteristics = g.services.asSequence().flatMap { it.characteristics.asSequence() }.toList()
+            fun isWritable(c: android.bluetooth.BluetoothGattCharacteristic) =
+                c.properties and android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE != 0 ||
+                    c.properties and android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE != 0
+            writeCharacteristic = allCharacteristics.firstOrNull { it.uuid == X6H_CHARACTERISTIC_UUID && isWritable(it) }
+                ?: allCharacteristics.firstOrNull { isWritable(it) }
             val found = writeCharacteristic
             if (found == null) {
                 if (!servicesReady.isCompleted) servicesReady.completeExceptionally(IllegalStateException("BLE printer has no writable characteristic"))
@@ -131,7 +143,14 @@ class BleGattTransport(context: Context, private val device: BluetoothDevice) : 
         gatt?.requestMtu(247)
     }
 
-    override suspend fun send(data: ByteArray) {
+    override suspend fun send(data: ByteArray) = writeChunks(data, BLE_DEFAULT_CHUNK)
+
+    /** Each frame goes out in as few ATT writes as the negotiated MTU allows, so frames are not split across writes. */
+    override suspend fun sendFrames(frames: List<ByteArray>) {
+        frames.forEach { frame -> writeChunks(frame, maxPayload) }
+    }
+
+    private suspend fun writeChunks(data: ByteArray, chunkSize: Int) {
         val activeGatt = checkNotNull(gatt) { "BLE-принтер не подключён" }
         val characteristic = checkNotNull(writeCharacteristic) { "BLE write characteristic не найден" }
         val writeType = if (characteristic.properties and android.bluetooth.BluetoothGattCharacteristic.PROPERTY_WRITE != 0) {
@@ -139,7 +158,6 @@ class BleGattTransport(context: Context, private val device: BluetoothDevice) : 
         } else {
             android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
         }
-        val chunkSize = 20
         data.asList().chunked(chunkSize).forEach { chunk ->
             val bytes = chunk.toByteArray()
             if (writeType == android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT) {
