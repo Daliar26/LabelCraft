@@ -32,7 +32,13 @@ jobs:
       - name: Install Android SDK packages
         run: sdkmanager --install 'platform-tools' 'platforms;android-36' 'build-tools;36.0.0'
       - name: Run unit tests
-        run: gradle --no-daemon test
+        shell: bash
+        run: |
+          set -o pipefail
+          gradle --no-daemon test 2>&1 | tee build.log
+      - name: Report errors
+        if: failure()
+        run: bash tools/ci-report.sh build.log
 
   assemble-debug:
     name: Assemble debug APK
@@ -55,7 +61,13 @@ jobs:
       - name: Install Android SDK packages
         run: sdkmanager --install 'platform-tools' 'platforms;android-36' 'build-tools;36.0.0'
       - name: Assemble debug
-        run: gradle --no-daemon assembleDebug
+        shell: bash
+        run: |
+          set -o pipefail
+          gradle --no-daemon assembleDebug 2>&1 | tee build.log
+      - name: Report errors
+        if: failure()
+        run: bash tools/ci-report.sh build.log
       - uses: actions/upload-artifact@v4
         with:
           name: labelcraft-debug-apk
@@ -84,7 +96,13 @@ jobs:
       - name: Install Android SDK packages
         run: sdkmanager --install 'platform-tools' 'platforms;android-36' 'build-tools;36.0.0'
       - name: Assemble release
-        run: gradle --no-daemon assembleRelease
+        shell: bash
+        run: |
+          set -o pipefail
+          gradle --no-daemon assembleRelease 2>&1 | tee build.log
+      - name: Report errors
+        if: failure()
+        run: bash tools/ci-report.sh build.log
       - uses: actions/upload-artifact@v4
         with:
           name: labelcraft-release-apk-unsigned
