@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.nativeKeyEvent
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.PointerEventType
@@ -155,7 +156,7 @@ fun LabelEditorScreen(
             .fillMaxSize()
             .onPreviewKeyEvent { event ->
                 if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
-                val keyCode = event.key.keyCode.toInt()
+                val keyCode = event.nativeKeyEvent.keyCode
                 val action = HardwareKeyMapper.map(keyCode, scrollProfile)
                 if (action == HardwareAction.NONE) return@onPreviewKeyEvent false
                 val delta = HardwareKeyMapper.deltaPx(
