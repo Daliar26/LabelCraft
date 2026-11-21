@@ -143,7 +143,7 @@ private fun PrintQueueScreen(
                             PrintJobStatus.COMPLETED -> "Готово"
                             PrintJobStatus.FAILED -> "Ошибка"
                         }}")
-                        if (job.error != null) Text(job.error)
+                        job.error?.let { Text(it) }
                         if (job.status == PrintJobStatus.FAILED) Button(onClick = { onRetry(job.id) }) { Text("Повторить") }
                     }
                 }
