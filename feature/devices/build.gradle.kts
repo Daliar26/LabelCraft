@@ -19,6 +19,7 @@ android {
 dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(project(":core:printer"))
+    implementation(project(":core:label"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.foundation)

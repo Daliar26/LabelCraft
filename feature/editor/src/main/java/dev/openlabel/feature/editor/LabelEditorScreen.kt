@@ -38,12 +38,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.nativeKeyEvent
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.awaitPointerEvent
-import androidx.compose.ui.input.pointer.awaitPointerEventScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -158,17 +155,18 @@ fun LabelEditorScreen(
             .fillMaxSize()
             .onPreviewKeyEvent { event ->
                 if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
-                val action = HardwareKeyMapper.map(event.nativeKeyEvent.keyCode, scrollProfile)
+                val keyCode = event.key.keyCode.toInt()
+                val action = HardwareKeyMapper.map(keyCode, scrollProfile)
                 if (action == HardwareAction.NONE) return@onPreviewKeyEvent false
                 val delta = HardwareKeyMapper.deltaPx(
                     action = action,
                     profile = scrollProfile,
                     density = density,
                     dpi = current.dpi.dotsPerInch,
-                    repeated = event.nativeKeyEvent.repeatCount,
+                    repeated = false,
                 )
                 scope.launch { scroll.scrollBy(delta) }
-                scrollProfile.consumeVolumeKeys || event.nativeKeyEvent.keyCode !in setOf(
+                scrollProfile.consumeVolumeKeys || keyCode !in setOf(
                     android.view.KeyEvent.KEYCODE_VOLUME_UP,
                     android.view.KeyEvent.KEYCODE_VOLUME_DOWN,
                 )

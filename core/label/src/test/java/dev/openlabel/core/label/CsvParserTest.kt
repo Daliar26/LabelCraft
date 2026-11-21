@@ -15,9 +15,9 @@ class CsvParserTest {
     @Test fun parsesCrlf() = assertEquals(2, CsvParser.parse("a,b\r\n1,2\r\n").size)
     @Test fun parsesEmbeddedNewline() = assertEquals("first\nsecond", CsvParser.parse("\"first\nsecond\",x").first().first())
     @Test fun stripsUtf8Bom() = assertEquals("name", CsvParser.parse("\uFEFFname").first().first())
-    @Test fun rejectsUnclosedQuote() = assertThrows(IllegalArgumentException::class.java) { CsvParser.parse("\"abc") }
+    @Test fun rejectsUnclosedQuote() { assertThrows(IllegalArgumentException::class.java) { CsvParser.parse("\"abc") } }
     @Test fun headerRowsBecomeMaps() = assertEquals("Ada", CsvParser.parseWithHeader("name,qty\nAda,3").single()["name"])
-    @Test fun rejectsDuplicateHeaders() = assertThrows(IllegalArgumentException::class.java) { CsvParser.parseWithHeader("name,name\na,b") }
+    @Test fun rejectsDuplicateHeaders() { assertThrows(IllegalArgumentException::class.java) { CsvParser.parseWithHeader("name,name\na,b") } }
     @Test fun expandsCsvTokensInTemplateText() {
         val template = LabelDocument(elements = listOf(TextElement("t", 1f, 1f, 20f, 6f, "{{name}} / {{sku}}")))
         val result = CsvBatchExpander.expand(template, listOf(mapOf("name" to "Pen", "sku" to "P01")))
