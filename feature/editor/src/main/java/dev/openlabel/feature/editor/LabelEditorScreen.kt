@@ -9,7 +9,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -38,8 +37,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.nativeKeyEvent
-import androidx.compose.ui.input.key.nativeKeyEvent
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.PointerEventType
@@ -165,7 +162,7 @@ fun LabelEditorScreen(
                     profile = scrollProfile,
                     density = density,
                     dpi = current.dpi.dotsPerInch,
-                    repeated = false,
+                    repeated = 0,
                 )
                 scope.launch { scroll.scrollBy(delta) }
                 scrollProfile.consumeVolumeKeys || keyCode !in setOf(
@@ -187,7 +184,7 @@ fun LabelEditorScreen(
                                     density = density,
                                     dpi = current.dpi.dotsPerInch,
                                 )
-                                scroll.scrollBy(delta * kotlin.math.abs(wheelDelta).coerceAtLeast(1f))
+                                scope.launch { scroll.scrollBy(delta * kotlin.math.abs(wheelDelta).coerceAtLeast(1f)) }
                             }
                             pointerEvent.changes.forEach { it.consume() }
                         }
