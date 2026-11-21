@@ -17,4 +17,6 @@
 | Queue | Sequential coroutine worker; SharedPreferences JSON persistence; explicit retry | Local-first baseline; no cross-device/shared queue |
 | Licensing/privacy | Apache-2.0 project; ZXing Core Apache-2.0; no ads/analytics/trackers | Allows closed-source commercial derivatives; no mandatory network access |
 | Local build | Not verified in this session; isolated Kotlin smoke suite passed | No Gradle, Android SDK, adb or network/DNS; wrapper JAR cannot be fetched/generated here |
-| Publication | Deferred; CI/release workflows prepared only | No `gh` CLI, GitHub credentials, remote URL or outbound GitHub DNS in the workspace |
+| Publication | GitHub repo `Daliar26/LabelCraft`; CI builds unit tests, debug and release APK | Build verified on GitHub Actions; the authoring sandbox still has no Gradle or Android SDK |
+| X6H BLE | AE01 characteristic preferred; each frame written whole, MTU-aware; 48-byte LSB-first rows | Frames match the inkjet reference (unit tests); a physical test print per model is still required; 48 mm head limit |
+| CI diagnostics | Failing Gradle lines are emitted as GitHub annotations via `tools/ci-report.sh` | Full logs are not reachable from the sandbox; annotations are readable through the Checks API |
